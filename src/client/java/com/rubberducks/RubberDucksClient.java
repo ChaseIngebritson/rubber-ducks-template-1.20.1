@@ -1,0 +1,34 @@
+package com.rubberducks;
+
+import com.rubberducks.model.RubberDuckEntityModel;
+import com.rubberducks.renderer.RubberDuckEntityRenderer;
+
+import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.api.Environment;
+import net.fabricmc.fabric.api.client.rendering.v1.EntityModelLayerRegistry;
+import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
+import net.minecraft.client.render.entity.model.EntityModelLayer;
+import net.minecraft.util.Identifier;
+import net.fabricmc.api.EnvType;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+@Environment(EnvType.CLIENT)
+public class RubberDucksClient implements ClientModInitializer {
+	public static final EntityModelLayer MODEL_RUBBER_DUCK_LAYER = new EntityModelLayer(new Identifier("rubberducks", "rubber_duck"), "main");
+	public static final Logger LOGGER = LoggerFactory.getLogger("rubberducks");
+
+	@Override
+	public void onInitializeClient() {
+		LOGGER.info("Hello Fabric world (client)!");
+
+		EntityRendererRegistry.register(RubberDucks.RUBBER_DUCK, (context) -> {
+			LOGGER.info("Entity renderer registered", context);
+
+			return new RubberDuckEntityRenderer(context);
+		});
+
+		EntityModelLayerRegistry.registerModelLayer(MODEL_RUBBER_DUCK_LAYER, RubberDuckEntityModel::getTexturedModelData);
+	}
+}
