@@ -4,8 +4,6 @@ import java.util.List;
 
 import org.jetbrains.annotations.Nullable;
 
-import com.rubberducks.RubberDucks;
-
 import net.minecraft.block.BlockState;
 import net.minecraft.block.LilyPadBlock;
 import net.minecraft.entity.Entity;
@@ -23,6 +21,7 @@ import net.minecraft.nbt.NbtCompound;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.predicate.entity.EntityPredicates;
 import net.minecraft.registry.tag.FluidTags;
+import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.util.function.BooleanBiFunction;
@@ -39,26 +38,24 @@ import net.minecraft.world.World;
 import net.minecraft.world.event.GameEvent;
 
 public class RubberDuckEntity extends Entity {
+  public static final float WATER_VELOCITY_DECAY = 0.99f;
+  public static final float LAND_VELOCITY_DECAY = 0.6f;
+  public static final float UNDER_FLOWING_WATER_VELOCITY_DECAY = 0.9f;
+  public static final float UNDER_WATER_VELOCITY_DECAY = 0.45f;
+  public static final float IN_AIR_VELOCITY_DECAY = 0.9f;
+
   private static final TrackedData<Integer> DAMAGE_WOBBLE_TICKS = DataTracker.registerData(BoatEntity.class, TrackedDataHandlerRegistry.INTEGER);
   private static final TrackedData<Integer> DAMAGE_WOBBLE_SIDE = DataTracker.registerData(BoatEntity.class, TrackedDataHandlerRegistry.INTEGER);
   private static final TrackedData<Float> DAMAGE_WOBBLE_STRENGTH = DataTracker.registerData(BoatEntity.class, TrackedDataHandlerRegistry.FLOAT);
   // private static final TrackedData<Integer> BOAT_TYPE = DataTracker.registerData(BoatEntity.class, TrackedDataHandlerRegistry.INTEGER);
   private static final TrackedData<Integer> BUBBLE_WOBBLE_TICKS = DataTracker.registerData(BoatEntity.class, TrackedDataHandlerRegistry.INTEGER);
 
-  public static final int field_30697 = 0;
-  public static final int field_30698 = 1;
-  /**
-   * A boat will emit a sound event every time a paddle is near this rotation.
-   */
-  public static final double EMIT_SOUND_EVENT_PADDLE_ROTATION = 0.7853981852531433;
-  public static final int field_30700 = 60;
   private float velocityDecay;
-  private float ticksUnderwater;
-  private int field_7708;
+  private int velocityInterval;
   private double x;
   private double y;
   private double z;
-  private double boatYaw;
+  private double yaw;
   private double boatPitch;
   private double waterLevel;
   private float nearbySlipperiness;
@@ -177,7 +174,6 @@ public class RubberDuckEntity extends Entity {
     }
   }
 
-  
   // public Item asItem() {
   //   return switch (this.getVariant()) {
   //     case Type.SPRUCE -> Items.SPRUCE_BOAT;
@@ -209,9 +205,9 @@ public class RubberDuckEntity extends Entity {
     this.x = x;
     this.y = y;
     this.z = z;
-    this.boatYaw = yaw;
+    this.yaw = yaw;
     this.boatPitch = pitch;
-    this.field_7708 = 10;
+    this.velocityInterval = 10;
   }
 
   @Override
@@ -223,7 +219,6 @@ public class RubberDuckEntity extends Entity {
   public void tick() {
     this.lastLocation = this.location;
     this.location = this.checkLocation();
-    this.ticksUnderwater = this.location == Location.UNDER_WATER || this.location == Location.UNDER_FLOWING_WATER ? (this.ticksUnderwater += 1.0f) : 0.0f;
 
     if (this.getDamageWobbleTicks() > 0) {
       this.setDamageWobbleTicks(this.getDamageWobbleTicks() - 1);
@@ -288,20 +283,23 @@ public class RubberDuckEntity extends Entity {
 
   private void updatePositionAndRotation() {
     if (this.isLogicalSideForUpdatingMovement()) {
-      this.field_7708 = 0;
+      this.velocityInterval = 0;
       this.updateTrackedPosition(this.getX(), this.getY(), this.getZ());
     }
-    if (this.field_7708 <= 0) {
-      return;
-    }
-    double d = this.getX() + (this.x - this.getX()) / (double)this.field_7708;
-    double e = this.getY() + (this.y - this.getY()) / (double)this.field_7708;
-    double f = this.getZ() + (this.z - this.getZ()) / (double)this.field_7708;
-    double g = MathHelper.wrapDegrees(this.boatYaw - (double)this.getYaw());
-    this.setYaw(this.getYaw() + (float)g / (float)this.field_7708);
-    this.setPitch(this.getPitch() + (float)(this.boatPitch - (double)this.getPitch()) / (float)this.field_7708);
-    --this.field_7708;
-    this.setPosition(d, e, f);
+
+    if (this.velocityInterval <= 0) return;
+
+    double newX = this.getX() + (this.x - this.getX()) / (double)this.velocityInterval;
+    double newY = this.getY() + (this.y - this.getY()) / (double)this.velocityInterval;
+    double newZ = this.getZ() + (this.z - this.getZ()) / (double)this.velocityInterval;
+    double newYaw = MathHelper.wrapDegrees(this.yaw - (double)this.getYaw());
+    
+    this.setYaw(this.getYaw() + (float)newYaw / (float)this.velocityInterval);
+    this.setPitch(this.getPitch() + (float)(this.boatPitch - (double)this.getPitch()) / (float)this.velocityInterval);
+    
+    --this.velocityInterval;
+    
+    this.setPosition(newX, newY, newZ);
     this.setRotation(this.getYaw(), this.getPitch());
   }
 
@@ -439,6 +437,7 @@ public class RubberDuckEntity extends Entity {
     double e = this.hasNoGravity() ? 0.0 : d;
     double f = 0.0;
     this.velocityDecay = 0.05f;
+    
     if (this.lastLocation == Location.IN_AIR && this.location != Location.IN_AIR && this.location != Location.ON_LAND) {
       this.waterLevel = this.getBodyY(1.0);
       this.setPosition(this.getX(), (double)(this.getWaterHeightBelow() - this.getHeight()) + 0.101, this.getZ());
@@ -448,21 +447,19 @@ public class RubberDuckEntity extends Entity {
     } else {
       if (this.location == Location.IN_WATER) {
         f = (this.waterLevel - this.getY()) / (double)this.getHeight();
-        this.velocityDecay = 0.9f;
+        this.velocityDecay = WATER_VELOCITY_DECAY;
       } else if (this.location == Location.UNDER_FLOWING_WATER) {
         e = -7.0E-4;
-        this.velocityDecay = 0.9f;
+        this.velocityDecay = UNDER_FLOWING_WATER_VELOCITY_DECAY;
       } else if (this.location == Location.UNDER_WATER) {
         f = 0.01f;
-        this.velocityDecay = 0.45f;
+        this.velocityDecay = UNDER_WATER_VELOCITY_DECAY;
       } else if (this.location == Location.IN_AIR) {
-        this.velocityDecay = 0.9f;
+        this.velocityDecay = IN_AIR_VELOCITY_DECAY;
       } else if (this.location == Location.ON_LAND) {
         this.velocityDecay = this.nearbySlipperiness;
-        if (this.getControllingPassenger() instanceof PlayerEntity) {
-            this.nearbySlipperiness /= 2.0f;
-        }
       }
+
       Vec3d vec3d = this.getVelocity();
       this.setVelocity(vec3d.x * (double)this.velocityDecay, vec3d.y + e, vec3d.z * (double)this.velocityDecay);
 
@@ -487,16 +484,14 @@ public class RubberDuckEntity extends Entity {
 
   @Override
   public ActionResult interact(PlayerEntity player, Hand hand) {
-    // if (player.shouldCancelInteraction()) {
-    //   return ActionResult.PASS;
-    // }
-    // if (this.ticksUnderwater < 60.0f) {
-    //   if (!this.getWorld().isClient) {
-    //     return player.startRiding(this) ? ActionResult.CONSUME : ActionResult.PASS;
-    //   }
-    //   return ActionResult.SUCCESS;
-    // }
-    return ActionResult.PASS;
+    if (player.shouldCancelInteraction()) {
+      return ActionResult.PASS;
+    }
+    
+    this.pushAwayFrom(player);
+    this.getWorld().playSound(this.getX(), this.getY(), this.getZ(), SoundEvents.ENTITY_CHICKEN_AMBIENT, this.getSoundCategory(), 1.0f, 0.8f + 0.4f * this.random.nextFloat(), false);
+
+    return ActionResult.SUCCESS;
   }
 
   @Override
