@@ -22,10 +22,10 @@ import net.minecraft.util.math.RotationAxis;
 import net.fabricmc.api.EnvType;
 
 @Environment(EnvType.CLIENT)
-public class RubberDuckEntityRenderer extends EntityRenderer<RubberDuckEntity>{
+public class RubberDuckEntityRenderer extends EntityRenderer<RubberDuckEntity> {
   private final RubberDuckEntityModel entityModel;
   private final Identifier texture = new Identifier("rubberducks", "textures/entity/rubber_duck/rubber_duck.png");
-  
+
   public RubberDuckEntityRenderer(EntityRendererFactory.Context context) {
     super(context);
     this.shadowRadius = 0.8f;
@@ -35,24 +35,28 @@ public class RubberDuckEntityRenderer extends EntityRenderer<RubberDuckEntity>{
   }
 
   @Override
-  public void render(RubberDuckEntity entity, float yaw, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light) {
+  public void render(RubberDuckEntity entity, float yaw, float tickDelta, MatrixStack matrices,
+      VertexConsumerProvider vertexConsumers, int light) {
     float k;
     matrices.push();
 
     matrices.translate(0.0f, 0.375f, 0.0f);
     matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(180.0f - yaw));
 
-    float h = (float)entity.getDamageWobbleTicks() - yaw;
+    float h = (float) entity.getDamageWobbleTicks() - yaw;
     float j = entity.getDamageWobbleStrength() - yaw;
 
-    if (j < 0.0f) j = 0.0f;
+    if (j < 0.0f)
+      j = 0.0f;
 
     if (h > 0.0f) {
-      matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(MathHelper.sin((float)h) * h * j / 10.0f * (float)entity.getDamageWobbleSide()));
+      matrices.multiply(RotationAxis.POSITIVE_X
+          .rotationDegrees(MathHelper.sin((float) h) * h * j / 10.0f * (float) entity.getDamageWobbleSide()));
     }
 
-    if (!MathHelper.approximatelyEquals((float)(k = entity.interpolateBubbleWobble(tickDelta)), (float)0.0f)) {
-      matrices.multiply(new Quaternionf().setAngleAxis(entity.interpolateBubbleWobble(tickDelta) * ((float)Math.PI / 180), 1.0f, 0.0f, 1.0f));
+    if (!MathHelper.approximatelyEquals((float) (k = entity.interpolateBubbleWobble(tickDelta)), (float) 0.0f)) {
+      matrices.multiply(new Quaternionf()
+          .setAngleAxis(entity.interpolateBubbleWobble(tickDelta) * ((float) Math.PI / 180), 1.0f, 0.0f, 1.0f));
     }
 
     matrices.scale(-1.0f, -1.0f, 1.0f);
@@ -66,11 +70,11 @@ public class RubberDuckEntityRenderer extends EntityRenderer<RubberDuckEntity>{
     if (!entity.isSubmergedInWater()) {
       VertexConsumer vertexConsumer2 = vertexConsumers.getBuffer(RenderLayer.getWaterMask());
       if (entityModel instanceof ModelWithWaterPatch) {
-        ModelWithWaterPatch modelWithWaterPatch = (ModelWithWaterPatch)((Object)entityModel);
+        ModelWithWaterPatch modelWithWaterPatch = (ModelWithWaterPatch) ((Object) entityModel);
         modelWithWaterPatch.getWaterPatch().render(matrices, vertexConsumer2, light, OverlayTexture.DEFAULT_UV);
       }
     }
-        
+
     matrices.pop();
 
     super.render(entity, yaw, tickDelta, matrices, vertexConsumers, light);

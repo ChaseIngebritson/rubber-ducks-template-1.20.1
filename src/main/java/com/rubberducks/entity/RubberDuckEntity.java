@@ -4,6 +4,8 @@ import java.util.List;
 
 import org.jetbrains.annotations.Nullable;
 
+import com.rubberducks.RubberDucks;
+
 import net.minecraft.block.BlockState;
 import net.minecraft.block.LilyPadBlock;
 import net.minecraft.entity.Entity;
@@ -21,9 +23,9 @@ import net.minecraft.nbt.NbtCompound;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.predicate.entity.EntityPredicates;
 import net.minecraft.registry.tag.FluidTags;
-import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.function.BooleanBiFunction;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
@@ -38,17 +40,25 @@ import net.minecraft.world.World;
 import net.minecraft.world.event.GameEvent;
 
 public class RubberDuckEntity extends Entity {
+  public Identifier texture = new Identifier("rubberducks", "textures/entity/rubber_duck/rubber_duck.png");
+
   public static final float WATER_VELOCITY_DECAY = 0.99f;
   public static final float LAND_VELOCITY_DECAY = 0.6f;
   public static final float UNDER_FLOWING_WATER_VELOCITY_DECAY = 0.9f;
   public static final float UNDER_WATER_VELOCITY_DECAY = 0.45f;
   public static final float IN_AIR_VELOCITY_DECAY = 0.9f;
 
-  private static final TrackedData<Integer> DAMAGE_WOBBLE_TICKS = DataTracker.registerData(BoatEntity.class, TrackedDataHandlerRegistry.INTEGER);
-  private static final TrackedData<Integer> DAMAGE_WOBBLE_SIDE = DataTracker.registerData(BoatEntity.class, TrackedDataHandlerRegistry.INTEGER);
-  private static final TrackedData<Float> DAMAGE_WOBBLE_STRENGTH = DataTracker.registerData(BoatEntity.class, TrackedDataHandlerRegistry.FLOAT);
-  // private static final TrackedData<Integer> BOAT_TYPE = DataTracker.registerData(BoatEntity.class, TrackedDataHandlerRegistry.INTEGER);
-  private static final TrackedData<Integer> BUBBLE_WOBBLE_TICKS = DataTracker.registerData(BoatEntity.class, TrackedDataHandlerRegistry.INTEGER);
+  private static final TrackedData<Integer> DAMAGE_WOBBLE_TICKS = DataTracker.registerData(BoatEntity.class,
+      TrackedDataHandlerRegistry.INTEGER);
+  private static final TrackedData<Integer> DAMAGE_WOBBLE_SIDE = DataTracker.registerData(BoatEntity.class,
+      TrackedDataHandlerRegistry.INTEGER);
+  private static final TrackedData<Float> DAMAGE_WOBBLE_STRENGTH = DataTracker.registerData(BoatEntity.class,
+      TrackedDataHandlerRegistry.FLOAT);
+  // private static final TrackedData<Integer> BOAT_TYPE =
+  // DataTracker.registerData(BoatEntity.class,
+  // TrackedDataHandlerRegistry.INTEGER);
+  private static final TrackedData<Integer> BUBBLE_WOBBLE_TICKS = DataTracker.registerData(BoatEntity.class,
+      TrackedDataHandlerRegistry.INTEGER);
 
   private float velocityDecay;
   private int velocityInterval;
@@ -100,7 +110,7 @@ public class RubberDuckEntity extends Entity {
   public boolean isCollidable() {
     return true;
   }
-  
+
   @Override
   public boolean isPushable() {
     return true;
@@ -129,22 +139,22 @@ public class RubberDuckEntity extends Entity {
     this.scheduleVelocityUpdate();
     this.emitGameEvent(GameEvent.ENTITY_DAMAGE, source.getAttacker());
 
-    boolean bl2 = bl = source.getAttacker() instanceof PlayerEntity && ((PlayerEntity)source.getAttacker()).getAbilities().creativeMode;
-    
+    boolean bl2 = bl = source.getAttacker() instanceof PlayerEntity
+        && ((PlayerEntity) source.getAttacker()).getAbilities().creativeMode;
+
     if (bl || this.getDamageWobbleStrength() > 40.0f) {
-        if (!bl && this.getWorld().getGameRules().getBoolean(GameRules.DO_ENTITY_DROPS)) {
-          // this.dropItems(source);
-        }
-        this.discard();
+      if (!bl && this.getWorld().getGameRules().getBoolean(GameRules.DO_ENTITY_DROPS)) {
+        // this.dropItems(source);
+      }
+      this.discard();
     }
     return true;
   }
 
   // protected void dropItems(DamageSource source) {
-  //   this.dropItem(this.asItem());
+  // this.dropItem(this.asItem());
   // }
 
-  
   @Override
   public void onBubbleColumnSurfaceCollision(boolean drag) {
     if (!this.getWorld().isClient) {
@@ -154,11 +164,13 @@ public class RubberDuckEntity extends Entity {
         this.setBubbleWobbleTicks(60);
       }
     }
-    
-    this.getWorld().addParticle(ParticleTypes.SPLASH, this.getX() + (double)this.random.nextFloat(), this.getY() + 0.7, this.getZ() + (double)this.random.nextFloat(), 0.0, 0.0, 0.0);
-    
+
+    this.getWorld().addParticle(ParticleTypes.SPLASH, this.getX() + (double) this.random.nextFloat(), this.getY() + 0.7,
+        this.getZ() + (double) this.random.nextFloat(), 0.0, 0.0, 0.0);
+
     if (this.random.nextInt(20) == 0) {
-      this.getWorld().playSound(this.getX(), this.getY(), this.getZ(), this.getSplashSound(), this.getSoundCategory(), 1.0f, 0.8f + 0.4f * this.random.nextFloat(), false);
+      this.getWorld().playSound(this.getX(), this.getY(), this.getZ(), this.getSplashSound(), this.getSoundCategory(),
+          1.0f, 0.8f + 0.4f * this.random.nextFloat(), false);
       this.emitGameEvent(GameEvent.SPLASH, this.getControllingPassenger());
     }
   }
@@ -175,17 +187,17 @@ public class RubberDuckEntity extends Entity {
   }
 
   // public Item asItem() {
-  //   return switch (this.getVariant()) {
-  //     case Type.SPRUCE -> Items.SPRUCE_BOAT;
-  //     case Type.BIRCH -> Items.BIRCH_BOAT;
-  //     case Type.JUNGLE -> Items.JUNGLE_BOAT;
-  //     case Type.ACACIA -> Items.ACACIA_BOAT;
-  //     case Type.CHERRY -> Items.CHERRY_BOAT;
-  //     case Type.DARK_OAK -> Items.DARK_OAK_BOAT;
-  //     case Type.MANGROVE -> Items.MANGROVE_BOAT;
-  //     case Type.BAMBOO -> Items.BAMBOO_RAFT;
-  //     default -> Items.OAK_BOAT;
-  //   };
+  // return switch (this.getVariant()) {
+  // case Type.SPRUCE -> Items.SPRUCE_BOAT;
+  // case Type.BIRCH -> Items.BIRCH_BOAT;
+  // case Type.JUNGLE -> Items.JUNGLE_BOAT;
+  // case Type.ACACIA -> Items.ACACIA_BOAT;
+  // case Type.CHERRY -> Items.CHERRY_BOAT;
+  // case Type.DARK_OAK -> Items.DARK_OAK_BOAT;
+  // case Type.MANGROVE -> Items.MANGROVE_BOAT;
+  // case Type.BAMBOO -> Items.BAMBOO_RAFT;
+  // default -> Items.OAK_BOAT;
+  // };
   // }
 
   @Override
@@ -201,7 +213,8 @@ public class RubberDuckEntity extends Entity {
   }
 
   @Override
-  public void updateTrackedPositionAndAngles(double x, double y, double z, float yaw, float pitch, int interpolationSteps, boolean interpolate) {
+  public void updateTrackedPositionAndAngles(double x, double y, double z, float yaw, float pitch,
+      int interpolationSteps, boolean interpolate) {
     this.x = x;
     this.y = y;
     this.z = z;
@@ -237,12 +250,13 @@ public class RubberDuckEntity extends Entity {
     } else {
       this.setVelocity(Vec3d.ZERO);
     }
-      
+
     this.handleBubbleColumn();
 
     this.checkBlockCollision();
 
-    List<Entity> list = this.getWorld().getOtherEntities(this, this.getBoundingBox().expand(0.2f, -0.01f, 0.2f), EntityPredicates.canBePushedBy(this));
+    List<Entity> list = this.getWorld().getOtherEntities(this, this.getBoundingBox().expand(0.2f, -0.01f, 0.2f),
+        EntityPredicates.canBePushedBy(this));
     if (!list.isEmpty()) {
       for (int j = 0; j < list.size(); ++j) {
         Entity entity = list.get(j);
@@ -257,7 +271,8 @@ public class RubberDuckEntity extends Entity {
       this.bubbleWobbleStrength = i > 0 ? (this.bubbleWobbleStrength += 0.05f) : (this.bubbleWobbleStrength -= 0.1f);
       this.bubbleWobbleStrength = MathHelper.clamp(this.bubbleWobbleStrength, 0.0f, 1.0f);
       this.lastBubbleWobble = this.bubbleWobble;
-      this.bubbleWobble = 10.0f * (float)Math.sin(0.5f * (float)this.getWorld().getTime()) * this.bubbleWobbleStrength;
+      this.bubbleWobble = 10.0f * (float) Math.sin(0.5f * (float) this.getWorld().getTime())
+          * this.bubbleWobbleStrength;
     } else {
       int i;
       if (!this.onBubbleColumnSurface) {
@@ -273,7 +288,8 @@ public class RubberDuckEntity extends Entity {
             this.setVelocity(vec3d.add(0.0, -0.7, 0.0));
             this.removeAllPassengers();
           } else {
-            this.setVelocity(vec3d.x, this.hasPassenger((Entity entity) -> entity instanceof PlayerEntity) ? 2.7 : 0.6, vec3d.z);
+            this.setVelocity(vec3d.x, this.hasPassenger((Entity entity) -> entity instanceof PlayerEntity) ? 2.7 : 0.6,
+                vec3d.z);
           }
         }
         this.onBubbleColumnSurface = false;
@@ -287,18 +303,20 @@ public class RubberDuckEntity extends Entity {
       this.updateTrackedPosition(this.getX(), this.getY(), this.getZ());
     }
 
-    if (this.velocityInterval <= 0) return;
+    if (this.velocityInterval <= 0)
+      return;
 
-    double newX = this.getX() + (this.x - this.getX()) / (double)this.velocityInterval;
-    double newY = this.getY() + (this.y - this.getY()) / (double)this.velocityInterval;
-    double newZ = this.getZ() + (this.z - this.getZ()) / (double)this.velocityInterval;
-    double newYaw = MathHelper.wrapDegrees(this.yaw - (double)this.getYaw());
-    
-    this.setYaw(this.getYaw() + (float)newYaw / (float)this.velocityInterval);
-    this.setPitch(this.getPitch() + (float)(this.boatPitch - (double)this.getPitch()) / (float)this.velocityInterval);
-    
+    double newX = this.getX() + (this.x - this.getX()) / (double) this.velocityInterval;
+    double newY = this.getY() + (this.y - this.getY()) / (double) this.velocityInterval;
+    double newZ = this.getZ() + (this.z - this.getZ()) / (double) this.velocityInterval;
+    double newYaw = MathHelper.wrapDegrees(this.yaw - (double) this.getYaw());
+
+    this.setYaw(this.getYaw() + (float) newYaw / (float) this.velocityInterval);
+    this.setPitch(
+        this.getPitch() + (float) (this.boatPitch - (double) this.getPitch()) / (float) this.velocityInterval);
+
     --this.velocityInterval;
-    
+
     this.setPosition(newX, newY, newZ);
     this.setRotation(this.getYaw(), this.getPitch());
   }
@@ -338,11 +356,13 @@ public class RubberDuckEntity extends Entity {
           if (fluidState.isIn(FluidTags.WATER)) {
             f = Math.max(f, fluidState.getHeight(this.getWorld(), mutable));
           }
-          if (f >= 1.0f) continue block0;
+          if (f >= 1.0f)
+            continue block0;
         }
       }
-      if (!(f < 1.0f)) continue;
-      return (float)mutable.getY() + f;
+      if (!(f < 1.0f))
+        continue;
+      return (float) mutable.getY() + f;
     }
     return l + 1;
   }
@@ -363,18 +383,23 @@ public class RubberDuckEntity extends Entity {
     for (int p = i; p < j; ++p) {
       for (int q = m; q < n; ++q) {
         int r = (p == i || p == j - 1 ? 1 : 0) + (q == m || q == n - 1 ? 1 : 0);
-        if (r == 2) continue;
+        if (r == 2)
+          continue;
         for (int s = k; s < l; ++s) {
-          if (r > 0 && (s == k || s == l - 1)) continue;
+          if (r > 0 && (s == k || s == l - 1))
+            continue;
           mutable.set(p, s, q);
           BlockState blockState = this.getWorld().getBlockState(mutable);
-          if (blockState.getBlock() instanceof LilyPadBlock || !VoxelShapes.matchesAnywhere(blockState.getCollisionShape(this.getWorld(), mutable).offset(p, s, q), voxelShape, BooleanBiFunction.AND)) continue;
+          if (blockState.getBlock() instanceof LilyPadBlock
+              || !VoxelShapes.matchesAnywhere(blockState.getCollisionShape(this.getWorld(), mutable).offset(p, s, q),
+                  voxelShape, BooleanBiFunction.AND))
+            continue;
           f += blockState.getBlock().getSlipperiness();
           ++o;
         }
       }
     }
-    return f / (float)o;
+    return f / (float) o;
   }
 
   private boolean checkBoatInWater() {
@@ -393,10 +418,11 @@ public class RubberDuckEntity extends Entity {
         for (int q = m; q < n; ++q) {
           mutable.set(o, p, q);
           FluidState fluidState = this.getWorld().getFluidState(mutable);
-          if (!fluidState.isIn(FluidTags.WATER)) continue;
-          float f = (float)p + fluidState.getHeight(this.getWorld(), mutable);
-          this.waterLevel = Math.max((double)f, this.waterLevel);
-          bl |= box.minY < (double)f;
+          if (!fluidState.isIn(FluidTags.WATER))
+            continue;
+          float f = (float) p + fluidState.getHeight(this.getWorld(), mutable);
+          this.waterLevel = Math.max((double) f, this.waterLevel);
+          bl |= box.minY < (double) f;
         }
       }
     }
@@ -420,7 +446,9 @@ public class RubberDuckEntity extends Entity {
         for (int q = m; q < n; ++q) {
           mutable.set(o, p, q);
           FluidState fluidState = this.getWorld().getFluidState(mutable);
-          if (!fluidState.isIn(FluidTags.WATER) || !(d < (double)((float)mutable.getY() + fluidState.getHeight(this.getWorld(), mutable)))) continue;
+          if (!fluidState.isIn(FluidTags.WATER)
+              || !(d < (double) ((float) mutable.getY() + fluidState.getHeight(this.getWorld(), mutable))))
+            continue;
           if (fluidState.isStill()) {
             bl = true;
             continue;
@@ -435,24 +463,26 @@ public class RubberDuckEntity extends Entity {
   private void updateVelocity() {
     double d = -0.04f;
     double e = this.hasNoGravity() ? 0.0 : d;
-    double f = 0.0;
+    double f = 0.0; // Vertical velocity: > 1 = up, < 1 = down
     this.velocityDecay = 0.05f;
-    
+
+    // Entering water from the air
     if (this.lastLocation == Location.IN_AIR && this.location != Location.IN_AIR && this.location != Location.ON_LAND) {
       this.waterLevel = this.getBodyY(1.0);
-      this.setPosition(this.getX(), (double)(this.getWaterHeightBelow() - this.getHeight()) + 0.101, this.getZ());
+      this.setPosition(this.getX(), (double) (this.getWaterHeightBelow() - this.getHeight()) + 0.101, this.getZ());
       this.setVelocity(this.getVelocity().multiply(1.0, 0.0, 1.0));
       this.fallVelocity = 0.0;
       this.location = Location.IN_WATER;
     } else {
       if (this.location == Location.IN_WATER) {
-        f = (this.waterLevel - this.getY()) / (double)this.getHeight();
+        f = (this.waterLevel - this.getY()) / (double) this.getHeight();
         this.velocityDecay = WATER_VELOCITY_DECAY;
       } else if (this.location == Location.UNDER_FLOWING_WATER) {
         e = -7.0E-4;
         this.velocityDecay = UNDER_FLOWING_WATER_VELOCITY_DECAY;
       } else if (this.location == Location.UNDER_WATER) {
-        f = 0.01f;
+        // Rise back to the surface when underwater
+        f = 2.0f;
         this.velocityDecay = UNDER_WATER_VELOCITY_DECAY;
       } else if (this.location == Location.IN_AIR) {
         this.velocityDecay = IN_AIR_VELOCITY_DECAY;
@@ -461,7 +491,7 @@ public class RubberDuckEntity extends Entity {
       }
 
       Vec3d vec3d = this.getVelocity();
-      this.setVelocity(vec3d.x * (double)this.velocityDecay, vec3d.y + e, vec3d.z * (double)this.velocityDecay);
+      this.setVelocity(vec3d.x * (double) this.velocityDecay, vec3d.y + e, vec3d.z * (double) this.velocityDecay);
 
       if (f > 0.0) {
         Vec3d vec3d2 = this.getVelocity();
@@ -478,7 +508,7 @@ public class RubberDuckEntity extends Entity {
   @Override
   protected void readCustomDataFromNbt(NbtCompound nbt) {
     // if (nbt.contains("Type", NbtElement.STRING_TYPE)) {
-    //   this.setVariant(Type.getType(nbt.getString("Type")));
+    // this.setVariant(Type.getType(nbt.getString("Type")));
     // }
   }
 
@@ -487,9 +517,10 @@ public class RubberDuckEntity extends Entity {
     if (player.shouldCancelInteraction()) {
       return ActionResult.PASS;
     }
-    
+
     this.pushAwayFrom(player);
-    this.getWorld().playSound(this.getX(), this.getY(), this.getZ(), SoundEvents.ENTITY_CHICKEN_AMBIENT, this.getSoundCategory(), 1.0f, 0.8f + 0.4f * this.random.nextFloat(), false);
+    this.getWorld().playSound(this.getX(), this.getY(), this.getZ(), RubberDucks.SQUEAK1_EVENT,
+        this.getSoundCategory(), 1.0f, 0.8f + 0.4f * this.random.nextFloat(), false);
 
     return ActionResult.SUCCESS;
   }
@@ -503,8 +534,9 @@ public class RubberDuckEntity extends Entity {
 
     if (onGround) {
       this.onLanding();
-    } else if (!this.getWorld().getFluidState(this.getBlockPos().down()).isIn(FluidTags.WATER) && heightDifference < 0.0) {
-      this.fallDistance -= (float)heightDifference;
+    } else if (!this.getWorld().getFluidState(this.getBlockPos().down()).isIn(FluidTags.WATER)
+        && heightDifference < 0.0) {
+      this.fallDistance -= (float) heightDifference;
     }
   }
 
@@ -546,12 +578,12 @@ public class RubberDuckEntity extends Entity {
 
   // @Override
   // public void setVariant(Type type) {
-  //   this.dataTracker.set(BOAT_TYPE, type.ordinal());
+  // this.dataTracker.set(BOAT_TYPE, type.ordinal());
   // }
 
   // @Override
   // public Type getVariant() {
-  //   return Type.getType(this.dataTracker.get(BOAT_TYPE));
+  // return Type.getType(this.dataTracker.get(BOAT_TYPE));
   // }
 
   @Override
@@ -561,65 +593,66 @@ public class RubberDuckEntity extends Entity {
 
   // @Override
   // public ItemStack getPickBlockStack() {
-  //   return new ItemStack(this.asItem());
+  // return new ItemStack(this.asItem());
   // }
 
   // @Override
   // public /* synthetic */ Object getVariant() {
-  //   return this.getVariant();
+  // return this.getVariant();
   // }
 
   // public static enum Type implements StringIdentifiable
   // {
-  //   OAK(Blocks.OAK_PLANKS, "oak"),
-  //   SPRUCE(Blocks.SPRUCE_PLANKS, "spruce"),
-  //   BIRCH(Blocks.BIRCH_PLANKS, "birch"),
-  //   JUNGLE(Blocks.JUNGLE_PLANKS, "jungle"),
-  //   ACACIA(Blocks.ACACIA_PLANKS, "acacia"),
-  //   CHERRY(Blocks.CHERRY_PLANKS, "cherry"),
-  //   DARK_OAK(Blocks.DARK_OAK_PLANKS, "dark_oak"),
-  //   MANGROVE(Blocks.MANGROVE_PLANKS, "mangrove"),
-  //   BAMBOO(Blocks.BAMBOO_PLANKS, "bamboo");
+  // OAK(Blocks.OAK_PLANKS, "oak"),
+  // SPRUCE(Blocks.SPRUCE_PLANKS, "spruce"),
+  // BIRCH(Blocks.BIRCH_PLANKS, "birch"),
+  // JUNGLE(Blocks.JUNGLE_PLANKS, "jungle"),
+  // ACACIA(Blocks.ACACIA_PLANKS, "acacia"),
+  // CHERRY(Blocks.CHERRY_PLANKS, "cherry"),
+  // DARK_OAK(Blocks.DARK_OAK_PLANKS, "dark_oak"),
+  // MANGROVE(Blocks.MANGROVE_PLANKS, "mangrove"),
+  // BAMBOO(Blocks.BAMBOO_PLANKS, "bamboo");
 
-  //   private final String name;
-  //   private final Block baseBlock;
-  //   public static final StringIdentifiable.Codec<Type> CODEC;
-  //   private static final IntFunction<Type> BY_ID;
+  // private final String name;
+  // private final Block baseBlock;
+  // public static final StringIdentifiable.Codec<Type> CODEC;
+  // private static final IntFunction<Type> BY_ID;
 
-  //   private Type(Block baseBlock, String name) {
-  //     this.name = name;
-  //     this.baseBlock = baseBlock;
-  //   }
+  // private Type(Block baseBlock, String name) {
+  // this.name = name;
+  // this.baseBlock = baseBlock;
+  // }
 
-  //   @Override
-  //   public String asString() {
-  //     return this.name;
-  //   }
+  // @Override
+  // public String asString() {
+  // return this.name;
+  // }
 
-  //   public String getName() {
-  //     return this.name;
-  //   }
+  // public String getName() {
+  // return this.name;
+  // }
 
-  //   public Block getBaseBlock() {
-  //     return this.baseBlock;
-  //   }
+  // public Block getBaseBlock() {
+  // return this.baseBlock;
+  // }
 
-  //   public String toString() {
-  //     return this.name;
-  //   }
+  // public String toString() {
+  // return this.name;
+  // }
 
-  //   public static Type getType(int type) {
-  //     return BY_ID.apply(type);
-  //   }
+  // public static Type getType(int type) {
+  // return BY_ID.apply(type);
+  // }
 
-  //   public static Type getType(String name) {
-  //     return CODEC.byId(name, OAK);
-  //   }
+  // public static Type getType(String name) {
+  // return CODEC.byId(name, OAK);
+  // }
 
-  //   static {
-  //     CODEC = StringIdentifiable.createCodec(Type::values);
-  //     BY_ID = ValueLists.createIdToValueFunction(Enum::ordinal, Type.values(), ValueLists.OutOfBoundsHandling.ZERO);
-  //   }
+  // static {
+  // CODEC = StringIdentifiable.createCodec(Type::values);
+  // BY_ID = ValueLists.createIdToValueFunction(Enum::ordinal, Type.values(),
+  // ValueLists.OutOfBoundsHandling.ZERO);
+  // }
   // }
 
   public static enum Location {
