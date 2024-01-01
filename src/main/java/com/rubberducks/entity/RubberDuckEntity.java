@@ -40,8 +40,6 @@ import net.minecraft.world.World;
 import net.minecraft.world.event.GameEvent;
 
 public class RubberDuckEntity extends Entity {
-  public Identifier texture = new Identifier("rubberducks", "textures/entity/rubber_duck/rubber_duck.png");
-
   public static final float WATER_VELOCITY_DECAY = 0.99f;
   public static final float LAND_VELOCITY_DECAY = 0.6f;
   public static final float UNDER_FLOWING_WATER_VELOCITY_DECAY = 0.9f;

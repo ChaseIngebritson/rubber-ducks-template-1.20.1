@@ -28,13 +28,8 @@ public class RubberDucksClient implements ClientModInitializer {
 	public void onInitializeClient() {
 		LOGGER.info("Hello Fabric world (client)!");
 
-		EntityRendererRegistry.register(RubberDucks.RUBBER_DUCK, (context) -> {
-			return new RubberDuckEntityRenderer(context);
-		});
-
-		EntityRendererRegistry.register(RubberDucks.RUBBER_DUCK_COW, (context) -> {
-			return new RubberDuckCowEntityRenderer(context);
-		});
+		EntityRendererRegistry.register(RubberDucks.RUBBER_DUCK, (ctx) -> new RubberDuckEntityRenderer(ctx));
+		EntityRendererRegistry.register(RubberDucks.RUBBER_DUCK_COW, (ctx) -> new RubberDuckCowEntityRenderer(ctx));
 
 		EntityModelLayerRegistry.registerModelLayer(MODEL_RUBBER_DUCK_LAYER, RubberDuckEntityModel::getTexturedModelData);
 	}
