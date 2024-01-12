@@ -4,7 +4,7 @@ import net.fabricmc.api.Environment;
 import net.minecraft.client.render.entity.EntityRendererFactory;
 import net.minecraft.util.Identifier;
 
-import com.rubberducks.entity.RubberDuckEntity;
+import com.rubberducks.entity.RubberDuckBaseEntity;
 
 import net.fabricmc.api.EnvType;
 
@@ -15,7 +15,7 @@ public class RubberDuckCowEntityRenderer extends RubberDuckEntityRenderer {
   }
 
   @Override
-  public Identifier getTexture(RubberDuckEntity entity) {
+  public Identifier getTexture(RubberDuckBaseEntity entity) {
     return new Identifier("rubberducks", "textures/entity/rubber_duck/rubber_duck_cow.png");
   }
 }

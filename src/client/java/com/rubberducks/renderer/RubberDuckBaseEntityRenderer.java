@@ -3,8 +3,8 @@ package com.rubberducks.renderer;
 import org.joml.Quaternionf;
 
 import com.rubberducks.RubberDucksClient;
-import com.rubberducks.entity.RubberDuckEntity;
-import com.rubberducks.model.RubberDuckEntityModel;
+import com.rubberducks.entity.RubberDuckBaseEntity;
+import com.rubberducks.model.RubberDuckBaseEntityModel;
 
 import net.fabricmc.api.Environment;
 import net.minecraft.client.model.ModelPart;
@@ -22,19 +22,19 @@ import net.minecraft.util.math.RotationAxis;
 import net.fabricmc.api.EnvType;
 
 @Environment(EnvType.CLIENT)
-public class RubberDuckBaseEntityRenderer extends EntityRenderer<RubberDuckEntity> {
-  private final RubberDuckEntityModel entityModel;
+public class RubberDuckBaseEntityRenderer extends EntityRenderer<RubberDuckBaseEntity> {
+  private final RubberDuckBaseEntityModel entityModel;
 
   public RubberDuckBaseEntityRenderer(EntityRendererFactory.Context context) {
     super(context);
     this.shadowRadius = 0.8f;
 
     ModelPart model = context.getPart(RubberDucksClient.MODEL_RUBBER_DUCK_LAYER);
-    entityModel = new RubberDuckEntityModel(model);
+    entityModel = new RubberDuckBaseEntityModel(model);
   }
 
   @Override
-  public void render(RubberDuckEntity entity, float yaw, float tickDelta, MatrixStack matrices,
+  public void render(RubberDuckBaseEntity entity, float yaw, float tickDelta, MatrixStack matrices,
       VertexConsumerProvider vertexConsumers, int light) {
     Identifier texture = this.getTexture(entity);
     float k;
@@ -81,7 +81,7 @@ public class RubberDuckBaseEntityRenderer extends EntityRenderer<RubberDuckEntit
   }
 
   @Override
-  public Identifier getTexture(RubberDuckEntity entity) {
-    return new Identifier("rubberducks", "textures/entity/rubber_duck/rubber_duck.png");
+  public Identifier getTexture(RubberDuckBaseEntity entity) {
+    return new Identifier("rubberducks", "textures/entity/rubber_duck/rubber_duck_base.png");
   }
 }

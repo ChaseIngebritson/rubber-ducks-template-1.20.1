@@ -9,13 +9,10 @@ import net.minecraft.item.ItemUsage;
 import net.minecraft.item.Items;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
-import net.minecraft.util.Identifier;
 import net.minecraft.world.World;
 
-public class RubberDuckCowEntity extends RubberDuckEntity {
-  public Identifier texture = new Identifier("rubberducks", "textures/entity/rubber_duck/rubber_duck_cow.png");
-
-  public RubberDuckCowEntity(EntityType<RubberDuckEntity> type, World world) {
+public class RubberDuckCowEntity extends RubberDuckBaseEntity {
+  public RubberDuckCowEntity(EntityType<RubberDuckBaseEntity> type, World world) {
     super(type, world);
   }
 

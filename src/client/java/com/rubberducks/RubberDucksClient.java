@@ -1,6 +1,6 @@
 package com.rubberducks;
 
-import com.rubberducks.model.RubberDuckEntityModel;
+import com.rubberducks.model.RubberDuckBaseEntityModel;
 import com.rubberducks.renderer.RubberDuckCowEntityRenderer;
 import com.rubberducks.renderer.RubberDuckEntityRenderer;
 
@@ -31,6 +31,7 @@ public class RubberDucksClient implements ClientModInitializer {
 		EntityRendererRegistry.register(RubberDucks.RUBBER_DUCK, (ctx) -> new RubberDuckEntityRenderer(ctx));
 		EntityRendererRegistry.register(RubberDucks.RUBBER_DUCK_COW, (ctx) -> new RubberDuckCowEntityRenderer(ctx));
 
-		EntityModelLayerRegistry.registerModelLayer(MODEL_RUBBER_DUCK_LAYER, RubberDuckEntityModel::getTexturedModelData);
+		EntityModelLayerRegistry.registerModelLayer(MODEL_RUBBER_DUCK_LAYER,
+				RubberDuckBaseEntityModel::getTexturedModelData);
 	}
 }
